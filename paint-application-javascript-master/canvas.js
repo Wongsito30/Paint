@@ -1,13 +1,13 @@
 $(document).ready(function(){
     
-    var shape = {
+    /*var shape = {
 		type: "square",
 		x: x,
 		y: y,
 		width: width,
 		height: height,
 		selected: false
-	  };
+	  };*/
 
 	var sketch = document.querySelector('#sketch');
 	var canvas = document.querySelector('#canvas');
@@ -112,7 +112,7 @@ $(document).ready(function(){
 	};
 
     //MOVIMIENTO Y SELECCION DE FIGURA
-    canvas.addEventListener("mousemove", function(e) {
+    /*canvas.addEventListener("mousemove", function(e) {
 		// Verificar si se está arrastrando alguna figura
 		if (dragging) {
 		  // Actualizar las coordenadas de las figuras seleccionadas
@@ -149,7 +149,7 @@ $(document).ready(function(){
 	  canvas.addEventListener("mouseup", function() {
 		// Detener el arrastre al soltar el botón del ratón
 		dragging = false;
-	  });
+	  });*/
 
 	//DIBUJAR LINEA
 	var paint_line = function(e) {
@@ -354,6 +354,44 @@ $(document).ready(function(){
 		tmp_ctx.restore(); // restaura al estado original
 	};
 
+	// Función para dibujar un trapecio isósceles
+var paint_trapezoid = function(e) {
+    mouse.x = typeof e.offsetX !== 'undefined' ? e.offsetX : e.layerX;
+    mouse.y = typeof e.offsetY !== 'undefined' ? e.offsetY : e.layerY;
+
+    tmp_ctx.clearRect(0, 0, tmp_canvas.width, tmp_canvas.height);
+
+    var x = start_mouse.x;
+    var y = start_mouse.y;
+    var w = mouse.x - x;
+    var h = mouse.y - y;
+    
+    var baseWidth = Math.abs(w);
+    var topWidth = baseWidth * 0.7; // Ancho de la parte superior del trapecio, ajusta según sea necesario
+
+    tmp_ctx.save(); // Guarda el estado
+    tmp_ctx.beginPath();
+
+    // Mueve al vértice superior izquierdo del trapecio
+    tmp_ctx.moveTo(x + (baseWidth - topWidth) / 2, y);
+
+    // Línea al vértice superior derecho del trapecio
+    tmp_ctx.lineTo(x + (baseWidth + topWidth) / 2, y);
+
+    // Línea a la base inferior derecha del trapecio
+    tmp_ctx.lineTo(x + w, y + h);
+
+    // Línea a la base inferior izquierda del trapecio
+    tmp_ctx.lineTo(x, y + h);
+
+    // Línea de vuelta al vértice superior izquierdo (cierra el trapecio)
+    tmp_ctx.lineTo(x + (baseWidth - topWidth) / 2, y);
+
+    tmp_ctx.stroke();
+    tmp_ctx.closePath();
+    tmp_ctx.restore(); // Restaura al estado original
+};
+
 	//dibujar poligono
     var paint_polygon = function(e) {
 		mouse.x = typeof e.offsetX !== 'undefined' ? e.offsetX : e.layerX;
@@ -434,7 +472,8 @@ $(document).ready(function(){
 	// Choose tool
 	tool = 'pencil';
 	tools_func = {'pencil':paint_pencil, 'line':paint_line, 'square':paint_square, 
-					'circle':paint_circle, 'ellipse':paint_ellipse, 'eraser':paint_eraser,
+					'circle':paint_circle, 'ellipse':paint_ellipse, 'right-triangle': paint_right_triangle, 'triangle':paint_triangle,
+					'rounded-rectangle' : paint_rounded_rectangle, 'diamond': paint_diamond, 'isosceles-trapezoid': paint_trapezoid, 'polygon': paint_polygon, 'eraser':paint_eraser,
 					'text':paint_text};
 
 	$('#paint-panel').on('click', function(event){
@@ -562,6 +601,10 @@ $(document).ready(function(){
 
 		if (tool === 'diamond') {
 			tmp_canvas.addEventListener('mousemove', paint_diamond, false);
+    	}
+
+		if (tool === 'isosceles-trapezoid') {
+			tmp_canvas.addEventListener('mousemove', paint_trapezoid, false);
     	}
 
 		if (tool === 'polygon') {
