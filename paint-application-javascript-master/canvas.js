@@ -1,17 +1,11 @@
 $(document).ready(function(){
     
-    /*var shape = {
-		type: "square",
-		x: x,
-		y: y,
-		width: width,
-		height: height,
-		selected: false
-	  };*/
 
 	var sketch = document.querySelector('#sketch');
 	var canvas = document.querySelector('#canvas');
 	var tmp_canvas = document.createElement('canvas');
+	var fileInput = document.getElementById('file-input');
+
 	$('#paint-modal').css('visibility', 'hidden').show();
 	canvas.width = $(sketch).width();
 	canvas.height = $(sketch).height();
@@ -52,32 +46,6 @@ $(document).ready(function(){
 	tmp_ctx.strokeStyle = 'black';
 	tmp_ctx.fillStyle = 'black';
 
-	//evento de clic al lienzo para determinar si se hizo clic en una figura
-	/*canvas.addEventListener("click", function(e) {
-		// Obtener las coordenadas del clic
-		var mouseX = e.clientX - canvas.getBoundingClientRect().left;
-		var mouseY = e.clientY - canvas.getBoundingClientRect().top;
-	  
-		// Iterar sobre todas las figuras y verificar si se hizo clic en alguna
-		for (var i = 0; i < shapes.length; i++) {
-		  var shape = shapes[i];
-	  
-		  if (
-			mouseX >= shape.x &&
-			mouseX <= shape.x + shape.width &&
-			mouseY >= shape.y &&
-			mouseY <= shape.y + shape.height
-		  ) {
-			// Cambiar el estado de selección
-			shape.selected = !shape.selected;
-			break; // Romper el bucle después de seleccionar una figura
-		  }
-		}
-	  
-		// Volver a dibujar todas las figuras en sus estados actualizados
-		redraw();
-	  });*/
-
 	// paint functions
 	var paint_pencil = function(e) {
 
@@ -111,45 +79,6 @@ $(document).ready(function(){
 		
 	};
 
-    //MOVIMIENTO Y SELECCION DE FIGURA
-    /*canvas.addEventListener("mousemove", function(e) {
-		// Verificar si se está arrastrando alguna figura
-		if (dragging) {
-		  // Actualizar las coordenadas de las figuras seleccionadas
-		  for (var i = 0; i < shapes.length; i++) {
-			var shape = shapes[i];
-			if (shape.selected) {
-			  shape.x += e.clientX - lastX;
-			  shape.y += e.clientY - lastY;
-			}
-		  }
-	  
-		  // Volver a dibujar todas las figuras en sus posiciones actualizadas
-		  redraw();
-	  
-		  // Actualizar las últimas coordenadas del ratón
-		  lastX = e.clientX;
-		  lastY = e.clientY;
-		}
-	  });
-	  
-	  canvas.addEventListener("mousedown", function(e) {
-		// Verificar si se hizo clic en una figura seleccionada
-		for (var i = 0; i < shapes.length; i++) {
-		  var shape = shapes[i];
-		  if (shape.selected) {
-			dragging = true;
-			lastX = e.clientX;
-			lastY = e.clientY;
-			break;
-		  }
-		}
-	  });
-	  
-	  canvas.addEventListener("mouseup", function() {
-		// Detener el arrastre al soltar el botón del ratón
-		dragging = false;
-	  });*/
 
 	//DIBUJAR LINEA
 	var paint_line = function(e) {
@@ -468,12 +397,50 @@ var paint_trapezoid = function(e) {
     	ctx.clearRect(mouse.x, mouse.y, eraser_width, eraser_width);
 	}
     
+	var paint_text = function(e) {
+		// Tmp canvas is always cleared up before drawing.
+    	tmp_ctx.clearRect(0, 0, tmp_canvas.width, tmp_canvas.height);
+     	mouse.x = typeof e.offsetX !== 'undefined' ? e.offsetX : e.layerX;
+		mouse.y = typeof e.offsetY !== 'undefined' ? e.offsetY : e.layerY;	
+
+    	var x = Math.min(mouse.x, start_mouse.x);
+    	var y = Math.min(mouse.y, start_mouse.y);
+    	var width = Math.abs(mouse.x - start_mouse.x);
+    	var height = Math.abs(mouse.y - start_mouse.y);
+     
+    	textarea.style.left = x + 'px';
+    	textarea.style.top = y + 'px';
+    	textarea.style.width = width + 'px';
+    	textarea.style.height = height + 'px';
+     
+    	textarea.style.display = 'block';
+	}
+
+	var paint_image = function(e) {
+		var file = e.target.files[0];
+    var reader = new FileReader();
+
+    reader.onload = function(event) {
+        var img = new Image();
+        img.onload = function() {
+            // Aquí puedes dibujar la imagen en un canvas
+            // Por ejemplo:
+            var canvas = document.getElementById('canvas');
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+        img.src = event.target.result;
+    };
+
+    reader.readAsDataURL(file);
+	}
 	
 	// Choose tool
 	tool = 'pencil';
 	tools_func = {'pencil':paint_pencil, 'line':paint_line, 'square':paint_square, 
 					'circle':paint_circle, 'ellipse':paint_ellipse, 'right-triangle': paint_right_triangle, 'triangle':paint_triangle,
-					'rounded-rectangle' : paint_rounded_rectangle, 'diamond': paint_diamond, 'isosceles-trapezoid': paint_trapezoid, 'polygon': paint_polygon, 'eraser':paint_eraser,
+					'rounded-rectangle' : paint_rounded_rectangle, 'diamond': paint_diamond, 'isosceles-trapezoid': paint_trapezoid, 
+					'polygon': paint_polygon, 'eraser':paint_eraser, 'image': paint_image,
 					'text':paint_text};
 
 	$('#paint-panel').on('click', function(event){
@@ -503,28 +470,6 @@ var paint_trapezoid = function(e) {
 		}
 	});
 
-	function selectFigure(e) {
-		mouse.x = typeof e.offsetX !== 'undefined' ? e.offsetX : e.layerX;
-		mouse.y = typeof e.offsetY !== 'undefined' ? e.offsetY : e.layerY;
-	
-		// Itera sobre todas las figuras dibujadas y verifica si el mouse está dentro de alguna
-		for (var i = 0; i < figures.length; i++) {
-			var figure = figures[i];
-	
-			// Verifica si el mouse está dentro de las coordenadas de la figura
-			if (
-				mouse.x >= figure.x &&
-				mouse.x <= figure.x + figure.width &&
-				mouse.y >= figure.y &&
-				mouse.y <= figure.y + figure.height
-			) {
-				// La figura está seleccionada, puedes realizar acciones adicionales aquí
-				console.log('Figura seleccionada:', figure);
-				break; // Puedes detener el bucle si solo quieres seleccionar una figura
-			}
-		}
-	}
-	
 	// Change color
 	$('#color-panel').on('click', function(event){
 		// remove the mouse down eventlistener if any
@@ -614,6 +559,10 @@ var paint_trapezoid = function(e) {
     	if (tool === 'text') {
     		tmp_canvas.addEventListener('mousemove', paint_text, false);
     		textarea.style.display = 'none'; // important to hide when clicked outside
+    	}
+
+		if (tool === 'image') {
+    		tmp_canvas.addEventListener('mousemove', paint_image, false);
     	}
 
 		if (tool === 'select-shape') {
