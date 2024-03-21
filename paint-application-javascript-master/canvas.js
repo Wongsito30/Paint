@@ -2,9 +2,11 @@ $(document).ready(function(){
     
 
 	var sketch = document.querySelector('#sketch');
-	var canvas = document.querySelector('#canvas');
+	var canvas = document.querySelector('#canvas');	
+	var color = document.getElementById("colorPicker").value;
 	var tmp_canvas = document.createElement('canvas');
 	var fileInput = document.getElementById('file-input');
+	var capas = [];
 
 	$('#paint-modal').css('visibility', 'hidden').show();
 	canvas.width = $(sketch).width();
@@ -43,8 +45,16 @@ $(document).ready(function(){
 	tmp_ctx.lineWidth = 3;
 	tmp_ctx.lineJoin = 'round';
 	tmp_ctx.lineCap = 'round';
-	tmp_ctx.strokeStyle = 'black';
-	tmp_ctx.fillStyle = 'black';
+	$('#colorPicker').on('input', function() {
+		var selectedColor = $(this).val();
+		tmp_ctx.strokeStyle = selectedColor;
+		tmp_ctx.fillStyle = selectedColor;
+	});
+	
+	// Cambiar el color por defecto al valor inicial del selector de colores
+	var initialColor = $('#colorPicker').val();
+	tmp_ctx.strokeStyle = initialColor;
+	tmp_ctx.fillStyle = initialColor;
 
 	// paint functions
 	var paint_pencil = function(e) {
@@ -57,6 +67,7 @@ $(document).ready(function(){
 
 		if (ppts.length < 3) {
 			var b = ppts[0];
+			tmp_ctx.fillStyle = color;
 			tmp_ctx.beginPath();
 			//ctx.moveTo(b.x, b.y);
 			//ctx.lineTo(b.x+50, b.y+50);
@@ -79,23 +90,57 @@ $(document).ready(function(){
 		
 	};
 
-
+	
 	//DIBUJAR LINEA
 	var paint_line = function(e) {
-
+		// Obtener las coordenadas del mouse
 		mouse.x = typeof e.offsetX !== 'undefined' ? e.offsetX : e.layerX;
-		mouse.y = typeof e.offsetY !== 'undefined' ? e.offsetY : e.layerY;	
-		// Tmp canvas is always cleared up before drawing.
-    	tmp_ctx.clearRect(0, 0, tmp_canvas.width, tmp_canvas.height);
- 
-    	tmp_ctx.beginPath();
-    	tmp_ctx.moveTo(start_mouse.x, start_mouse.y);
-    	tmp_ctx.lineTo(mouse.x, mouse.y);
-    	tmp_ctx.stroke();
-    	tmp_ctx.closePath();
-	}
+		mouse.y = typeof e.offsetY !== 'undefined' ? e.offsetY : e.layerY;
+	
+		// Limpiar el canvas temporal
+		tmp_ctx.clearRect(0, 0, tmp_canvas.width, tmp_canvas.height);
+		tmp_ctx.strokeStyle = initialColor;
+	
+		// Implementar el algoritmo de Bresenham para dibujar la línea
+		var x0 = start_mouse.x;
+		var y0 = start_mouse.y;
+		var x1 = mouse.x;
+		var y1 = mouse.y;
+	
+		var dx = Math.abs(x1 - x0);
+		var dy = Math.abs(y1 - y0);
+		var sx = (x0 < x1) ? 1 : -1;
+		var sy = (y0 < y1) ? 1 : -1;
+		var err = dx - dy;
+		var e2;
+	
+		// Establecer el grosor de la línea
+		tmp_ctx.lineWidth = fontSize;
+		
+	
+		while (true) {
+			// Dibujar un rectángulo con el tamaño de línea deseado
+			tmp_ctx.fillRect(x0, y0, tmp_ctx.lineWidth, tmp_ctx.lineWidth);
+	
+			if (x0 === x1 && y0 === y1) break;
+	
+			e2 = 2 * err;
+	
+			if (e2 > -dy) {
+				err -= dy;
+				x0 += sx;
+			}
+	
+			if (e2 < dx) {
+				err += dx;
+				y0 += sy;
+			}
+		}
+	};
+
 
 	var paint_square = function(e) {
+		
 		mouse.x = typeof e.offsetX !== 'undefined' ? e.offsetX : e.layerX;
 		mouse.y = typeof e.offsetY !== 'undefined' ? e.offsetY : e.layerY;	
 		// Tmp canvas is always cleared up before drawing.
@@ -321,37 +366,52 @@ var paint_trapezoid = function(e) {
     tmp_ctx.restore(); // Restaura al estado original
 };
 
-	//dibujar poligono
-    var paint_polygon = function(e) {
-		mouse.x = typeof e.offsetX !== 'undefined' ? e.offsetX : e.layerX;
-		mouse.y = typeof e.offsetY !== 'undefined' ? e.offsetY : e.layerY;
-	
-		tmp_ctx.clearRect(0, 0, tmp_canvas.width, tmp_canvas.height);
-	
-		var x = start_mouse.x;
-		var y = start_mouse.y;
-	
-		tmp_ctx.save(); // guarda el estado
-		tmp_ctx.beginPath();
-	
-		// Mueve al primer punto del polígono
-		tmp_ctx.moveTo(x, y);
-	
-		// Calcula la distancia entre los puntos para determinar cuántos segmentos dibujar
-		var distance = Math.sqrt(Math.pow(mouse.x - x, 2) + Math.pow(mouse.y - y, 2));
-		var segments = Math.ceil(distance / 10); // ajusta el valor 10 según tus necesidades
-	
-		// Dibuja segmentos entre los puntos
-		for (var i = 1; i <= segments; i++) {
-			var xSegment = x + (i / segments) * (mouse.x - x);
-			var ySegment = y + (i / segments) * (mouse.y - y);
-			tmp_ctx.lineTo(xSegment, ySegment);
-		}
-	
-		tmp_ctx.stroke();
-		tmp_ctx.closePath();
-		tmp_ctx.restore(); // restaura al estado original
-	};
+var paint_polygon = function(numSides) {
+    // Calcular el ángulo de cada vértice del polígono
+    var angle = (Math.PI * 2) / numSides;
+
+    // Calcular el radio del círculo circunscrito al polígono
+    var radius = Math.min(Math.abs(mouse.x - start_mouse.x), Math.abs(mouse.y - start_mouse.y)) / 2;
+
+    tmp_ctx.clearRect(0, 0, tmp_canvas.width, tmp_canvas.height);
+
+    var centerX = (mouse.x + start_mouse.x) / 2;
+    var centerY = (mouse.y + start_mouse.y) / 2;
+
+    tmp_ctx.save(); // Guarda el estado
+    tmp_ctx.beginPath();
+
+    // Mueve al primer vértice del polígono
+    tmp_ctx.moveTo(centerX + radius * Math.cos(0), centerY + radius * Math.sin(0));
+
+    // Dibuja líneas a los demás vértices del polígono
+    for (var i = 1; i <= numSides; i++) {
+        var x = centerX + radius * Math.cos(angle * i);
+        var y = centerY + radius * Math.sin(angle * i);
+        tmp_ctx.lineTo(x, y);
+    }
+
+    tmp_ctx.closePath();
+    tmp_ctx.stroke();
+    tmp_ctx.restore(); // Restaura al estado original
+};
+function drawPolygon() {
+    var numSides = parseInt(document.getElementById('poli').value);
+    if (!isNaN(numSides) && numSides >= 3) {
+        // Llama a la función paint_polygon con el número de lados
+        paint_polygon(numSides);
+    } else {
+        alert("Por favor, ingresa un número válido de lados mayor o igual a 3.");
+    }
+}
+function paintPolygonOnMove(e) {
+    // Actualizar las coordenadas del mouse
+    mouse.x = typeof e.offsetX !== 'undefined' ? e.offsetX : e.layerX;
+    mouse.y = typeof e.offsetY !== 'undefined' ? e.offsetY : e.layerY;
+
+    // Llamar a la función paint_polygon con el número de lados
+    drawPolygon();
+}
 
 	var move_eraser = function(e){
 		mouse.x = typeof e.offsetX !== 'undefined' ? e.offsetX : e.layerX;
@@ -376,6 +436,7 @@ var paint_trapezoid = function(e) {
     	tmp_ctx.clearRect(0, 0, tmp_canvas.width, tmp_canvas.height);
      	mouse.x = typeof e.offsetX !== 'undefined' ? e.offsetX : e.layerX;
 		mouse.y = typeof e.offsetY !== 'undefined' ? e.offsetY : e.layerY;	
+		tmp_ctx.strokeStyle = initialColor;
 
     	var x = Math.min(mouse.x, start_mouse.x);
     	var y = Math.min(mouse.y, start_mouse.y);
@@ -396,51 +457,42 @@ var paint_trapezoid = function(e) {
 		// erase from the main ctx
     	ctx.clearRect(mouse.x, mouse.y, eraser_width, eraser_width);
 	}
-    
-	var paint_text = function(e) {
-		// Tmp canvas is always cleared up before drawing.
-    	tmp_ctx.clearRect(0, 0, tmp_canvas.width, tmp_canvas.height);
-     	mouse.x = typeof e.offsetX !== 'undefined' ? e.offsetX : e.layerX;
-		mouse.y = typeof e.offsetY !== 'undefined' ? e.offsetY : e.layerY;	
 
-    	var x = Math.min(mouse.x, start_mouse.x);
-    	var y = Math.min(mouse.y, start_mouse.y);
-    	var width = Math.abs(mouse.x - start_mouse.x);
-    	var height = Math.abs(mouse.y - start_mouse.y);
-     
-    	textarea.style.left = x + 'px';
-    	textarea.style.top = y + 'px';
-    	textarea.style.width = width + 'px';
-    	textarea.style.height = height + 'px';
-     
-    	textarea.style.display = 'block';
-	}
 
-	var paint_image = function(e) {
-		var file = e.target.files[0];
-    var reader = new FileReader();
+//Crear Capas
 
-    reader.onload = function(event) {
-        var img = new Image();
-        img.onload = function() {
-            // Aquí puedes dibujar la imagen en un canvas
-            // Por ejemplo:
-            var canvas = document.getElementById('canvas');
-            var ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        };
-        img.src = event.target.result;
-    };
 
-    reader.readAsDataURL(file);
-	}
-	
+/*function agregarCapa() {
+  // Crear una nueva capa vacía
+  var nuevaCapa = document.createElement("canvas");
+  nuevaCapa.width = canvas.width;
+  nuevaCapa.height = canvas.height;
+
+  // Agregar la nueva capa al array de capas
+  capas.push(nuevaCapa);
+
+  // Dibujar en la nueva capa
+  var nuevaCtx = nuevaCapa.getContext("2d");
+  nuevaCtx.fillStyle = "gray";
+  nuevaCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Dibujar todas las capas en el canvas principal
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  capas.forEach(function(capa) {
+    ctx.drawImage(capa, 0, 0);
+  });
+}
+
+// Asociar el evento de agregar capa a un botón
+var botonAgregarCapa = document.getElementById("agregarcapas");
+botonAgregarCapa.addEventListener("click", agregarCapa);*/
+
 	// Choose tool
 	tool = 'pencil';
 	tools_func = {'pencil':paint_pencil, 'line':paint_line, 'square':paint_square, 
 					'circle':paint_circle, 'ellipse':paint_ellipse, 'right-triangle': paint_right_triangle, 'triangle':paint_triangle,
 					'rounded-rectangle' : paint_rounded_rectangle, 'diamond': paint_diamond, 'isosceles-trapezoid': paint_trapezoid, 
-					'polygon': paint_polygon, 'eraser':paint_eraser, 'image': paint_image,
+					'polygon': paintPolygonOnMove, 'eraser':paint_eraser,
 					'text':paint_text};
 
 	$('#paint-panel').on('click', function(event){
@@ -474,19 +526,8 @@ var paint_trapezoid = function(e) {
 	$('#color-panel').on('click', function(event){
 		// remove the mouse down eventlistener if any
 		tmp_canvas.removeEventListener('mousemove', tools_func[tool], false);
-
-		var target = event.target,
-			tagName = target.tagName.toLowerCase();
+        tmp_ctx.strokeStyle = initialColor;
 		
-		if(target && tagName != 'button'){
-			target = target.parentNode;
-        	tagName = target.tagName.toLowerCase();
-		}
-
-		if(target && tagName === 'button'){
-			tmp_ctx.strokeStyle =  $(target).data('color');
-			tmp_ctx.fillStyle =  $(target).data('color');
-		}
 	});
 
 	
@@ -553,22 +594,14 @@ var paint_trapezoid = function(e) {
     	}
 
 		if (tool === 'polygon') {
-			tmp_canvas.addEventListener('mousemove', paint_polygon, false);
+			tmp_canvas.addEventListener('mousemove', paintPolygonOnMove, false);
     	}
 
     	if (tool === 'text') {
     		tmp_canvas.addEventListener('mousemove', paint_text, false);
     		textarea.style.display = 'none'; // important to hide when clicked outside
     	}
-
-		if (tool === 'image') {
-    		tmp_canvas.addEventListener('mousemove', paint_image, false);
-    	}
-
-		if (tool === 'select-shape') {
-    		tmp_canvas.addEventListener('mousemove', selectFigure, false);
-    	}
-
+		
     	if (tool === 'eraser') {
     		tmp_canvas.addEventListener('mousemove', paint_eraser, false);
     		// erase from the main ctx

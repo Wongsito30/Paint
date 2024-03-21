@@ -11,32 +11,7 @@
           <div id="color-panel">
 			<div class="btn-group">
 				
-        		<button class="btn" type="button" data-color="red" title="Red" style="background-color:red">
-        		</button>
-        		<button class="btn" type="button" data-color="lime" title="Green" style="background-color:lime">	
-        		</button>          
-        		<button class="btn" type="button" data-color="blue" title="Blue" style="background-color:blue">	
-        		</button>          
-        		<button class="btn" type="button" title="Yellow"  data-color="yellow" style="background-color:yellow">	
-        		</button>          
-        		<button class="btn" type="button"  data-color="magenta" title="Magenta" style="background-color:magenta">	
-        		</button>          
-        		<button class="btn" type="button"  data-color="cyan" title="Cyan" style="background-color:cyan">	
-        		</button>          
-        		<button class="btn" type="button" title="Orange"  data-color="orange" style="background-color:orange">	
-        		</button>          
-        		<button class="btn" type="button"  data-color="purple" title="Purple" style="background-color:purple">	
-        		</button>          
-        		         
-        		<button class="btn" type="button" title="Brown" data-color="brown"  style="background-color:brown">	
-        		</button>          
-        		<button class="btn" type="button" title="Black"  data-color="black" style="background-color:black">	
-        		</button>     
-        		<button class="btn" type="button" title="Gray"  data-color="gray" style="background-color:gray">	
-        		</button>     
-        		<button class="btn" type="button" title="lavender"  data-color="lavender" style="background-color:lavender">	
-        		<button class="btn" type="button" data-color="white" title="White" style="background-color:white">
-        		</button>
+        		<input type="color" id="colorPicker" value="black">
         		  
           	</div>
 
@@ -52,9 +27,58 @@
         		</button>     
 				
 				<input type="file" id="file-input">
-                <button class="btn" type="button" data-divbtn="image" title="Image">
-					<div class="fa fa-image"></div>
+                <button id="rotate-right-btn" class="btn" type="button" data-divbtn="image" title="Rotar a la derecha">
+					<div class="fa fa-repeat"></div> <!-- Icono de rotación a la derecha -->
 				</button>
+
+				<button id="rotate-left-btn" class="btn" type="button" data-divbtn="image" title="Rotar a la izquierda">
+					<div class="fa fa-undo"></div> <!-- Icono de rotación a la izquierda -->
+				</button>
+
+				<!-- Botón para enviar la imagen al frente -->
+                <button id="bring-to-front-btn" class="btn" type="button" title="Enviar al frente">
+                  <div class="fa fa-arrow-up"></div> <!-- Icono para enviar al frente -->
+                </button>
+
+                <!-- Botón para enviar la imagen atrás -->
+               <button id="send-to-back-btn" class="btn" type="button" title="Enviar atrás">
+                   <div class="fa fa-arrow-down"></div> <!-- Icono para enviar atrás -->
+               </button>
+
+               <!-- Botón para enviar la imagen al fondo -->
+               <button id="send-to-deep-btn" class="btn" type="button" title="Enviar al fondo">
+                  <div class="fa fa-arrow-circle-down"></div> <!-- Icono para enviar al fondo -->
+               </button>
+
+			   <!-- Botón para exportar a imagen -->
+<button id="export-image-btn" class="btn" type="button" title="Exportar a imagen">
+    <div class="fa fa-download"></div> <!-- Icono para exportar a imagen -->
+</button>
+
+<!-- Botón para exportar a PDF -->
+<button id="export-pdf-btn" class="btn" type="button" title="Exportar a PDF">
+    <div class="fa fa-file-pdf-o"></div> <!-- Icono para exportar a PDF -->
+</button>
+
+<!-- Botón para añadir nueva capa -->
+<button id="add-layer-btn" class="btn" type="button" data-divbtn="agregarcapas" title="Añadir nueva capa">
+    <div class="fa fa-plus"></div> <!-- Icono para añadir nueva capa -->
+</button>
+
+<!-- Botón para eliminar capa -->
+<button id="delete-layer-btn" class="btn" type="button" title="Eliminar capa">
+    <div class="fa fa-minus"></div> <!-- Icono para eliminar capa -->
+</button>
+
+<!-- Botón para mover capa hacia arriba -->
+<button id="move-up-layer-btn" class="btn" type="button" title="Mover capa hacia arriba">
+    <div class="fa fa-arrow-up"></div> <!-- Icono para mover capa hacia arriba -->
+</button>
+
+<!-- Botón para mover capa hacia abajo -->
+<button id="move-down-layer-btn" class="btn" type="button" title="Mover capa hacia abajo">
+    <div class="fa fa-arrow-down"></div> <!-- Icono para mover capa hacia abajo -->
+</button>
 
     	  	</div>
     	  </div>
@@ -131,11 +155,15 @@
 				<button class="btn" type="button" data-divbtn="polygon" title="Polygon">
 					<div class="custom-shape polygon"></div>
 				</button>
-        		</div>
+                
+                <input type="text" id="poli">
 
 				<button class="btn" type="button" data-divbtn="isosceles-trapezoid" title="Trapecio Isósceles">
 					<div class="custom-shape isosceles-trapezoid"></div>
 				  </button>
+        		</div>
+
+				
 
         		<form id="choose-size">
         			<div class="title">pick size</div>
@@ -164,5 +192,6 @@
 <script src="jquery.js" type="text/javascript"></script>
 <script src="bootstrap.js" type="text/javascript"></script>
 <script src="canvas.js" type="text/javascript"></script>
+<!--<script src="img.js"></script>-->
 </body>
 </html>
